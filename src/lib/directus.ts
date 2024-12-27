@@ -78,6 +78,8 @@ export interface Article {
   id: string;
   image?: string;
   date_created: string;
+  featured_status: 'none' | 'homepage' | 'top' | 'editor' | 'trending';
+  featured_order?: number;
   category?: {
     id: number;
     translations: {
@@ -99,6 +101,31 @@ interface SlugData {
   municipalitySlug: string;
   breadcrumb: { label: string; path: string }[];
 }
+// Aggiungi queste interfacce
+export interface Company {
+  id: number;
+  logo: string;
+  website: string;
+  email: string;
+  phone: string;
+  category_id: number;
+  location_id: number;
+  active: boolean;
+  featured: boolean;
+  socials: any;
+  translations: CompanyTranslation[];
+}
+
+export interface CompanyTranslation {
+  languages_code: string;
+  name: string;
+  slug_permalink: string;
+  description: string;
+  seo_title: string;
+  seo_description: string;
+  address: string;
+}
+
 /**
  * Recupera gli slug e il breadcrumb per una destinazione.
  *
@@ -236,6 +263,116 @@ class DirectusClient {
       return false;
     }
   }
+  async getCompanies(lang: string, filters: Record<string, any> = {}) {
+    try {
+      const response = await this.client.get('/items/companies', {
+        params: {
+          filter: {
+            active: { _eq: true },
+            ...filters
+          },
+          fields: [
+            'id',
+            'website',
+            'company_name',
+            'featured_image',
+            'images',
+            'email',
+            'phone',
+            'category_id',
+            'location_id',
+            'featured',
+            'socials',
+            'translations.*'
+          ],
+          deep: {
+            translations: {
+              _filter: {
+                languages_code: {
+                  _eq: lang
+                }
+              }
+            }
+          }
+        }
+      });
+
+      return response.data?.data || [];
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+      return [];
+    }
+  }
+
+  async getCompanyBySlug(slug: string, lang: string) {
+    try {
+      const response = await this.client.get('/items/companies', {
+        params: {
+          filter: {
+            translations: {
+              slug_permalink: { _eq: slug }
+            }
+          },
+          fields: [
+            'id',
+            'featured_image',
+            'images',
+            'website',
+            'company_name',
+            'email',
+            'phone',
+            'category_id',
+            'location_id',
+            'featured',
+            'socials',
+            'translations.*'
+          ],
+          deep: {
+            translations: {
+              _filter: {
+                languages_code: {
+                  _eq: lang
+                }
+              }
+            }
+          }
+        }
+      });
+
+      return response.data?.data[0] || null;
+    } catch (error) {
+      console.error('Error fetching company:', error);
+      return null;
+    }
+  }
+
+  async getCompanyCategories(lang: string) {
+    try {
+      const response = await this.client.get('/items/company_categories', {
+        params: {
+          fields: [
+            'id',
+            'sort',
+            'translations.*'
+          ],
+          deep: {
+            translations: {
+              _filter: {
+                languages_code: {
+                  _eq: lang
+                }
+              }
+            }
+          }
+        }
+      });
+
+      return response.data?.data || [];
+    } catch (error) {
+      console.error('Error fetching company categories:', error);
+      return [];
+    }
+  }
   public async getArticleBySlug(slug: string, languageCode: string): Promise<Article | null> {
     try {
       const response = await this.client.get('/items/articles', {
@@ -355,55 +492,71 @@ class DirectusClient {
   
   public async getArticles(
     languageCode: string,
-    limit: number = -1, // -1 significa nessun limite
-    filters: Record<string, any> = {}
-  ): Promise<Article[]> {
+    offset: number = 0,
+    limit: number = 10,
+    filters: Record<string, any> = {},
+    featuredStatus?: string
+  ): Promise<{ articles: Article[]; total: number }> {
     try {
+      // Controllo autenticazione
       const isAuth = await this.testAuth();
       if (!isAuth) {
-        console.error('Authentication failed');
-        return [];
+        console.error("Authentication failed");
+        return { articles: [], total: 0 };
       }
-
-      // Parametri di base per la richiesta
+  
+      // Lingua predefinita
+      const defaultLanguage = "it";
+  
+      // Parametri base per la richiesta
       const params: Record<string, any> = {
-        sort: '-date_created',
+        sort: "-date_created",
         fields: [
-          'id',
-          'image',
-          'category_id',
-          'date_created',
-          'translations.titolo_articolo',
-          'translations.seo_summary',
-          'translations.slug_permalink'
+          "id",
+          "image",
+          "category_id",
+          "date_created",
+          "featured_status",
+          "translations.titolo_articolo",
+          "translations.seo_summary",
+          "translations.slug_permalink",
         ],
         deep: {
           translations: {
             _filter: {
               languages_code: {
-                _eq: languageCode
-              }
-            }
-          }
-        }
+                _eq: languageCode, // Fallback dinamico
+              },
+            },
+          },
+        },
+        offset: Math.max(offset, 0), // Garantisce che l'offset sia >= 0
+        limit: Math.max(limit, 1),  // Garantisce che il limite sia >= 1
+        meta: 'total_count', // Restituisce il conteggio totale
       };
-
-      // Aggiungi il limite solo se è un numero positivo
-      if (limit > 0) {
-        params.limit = limit;
-      }
-
+  
       // Aggiungi filtri opzionali se presenti
       if (Object.keys(filters).length > 0) {
         params.filter = filters;
       }
-
+  
+      // Aggiungi filtro per featured_status
+      if (featuredStatus) {
+        params.deep.translations._filter.featured_status = { _eq: featuredStatus };
+      }
+  
+      // Effettua la chiamata API
       const response = await this.client.get('/items/articles', { params });
-
-      return response.data.data || [];
-    } catch (error) {
-      console.error('Error fetching articles:', error);
-      return [];
+  
+      // Estrai articoli e totale dal meta
+      const articles = response.data.data || [];
+      const total = response.data.meta?.total_count || 0;
+  
+      return { articles, total };
+    } catch (error: any) {
+      // Gestione errori con messaggio dettagliato
+      console.error("Error fetching articles:", error.message || error);
+      return { articles: [], total: 0 };
     }
   }
   public async getDestinationBySlug(slug: string, languageCode: string): Promise<Destination | null> {
@@ -566,7 +719,11 @@ class DirectusClient {
       return null;
     }
   }
-  public async getArticlesByCategory(categorySlug: string, languageCode: string): Promise<Article[]> {
+  public async getArticlesByCategory(
+    categorySlug: string, 
+    languageCode: string, 
+    limit: number = 10 // Limite di default
+  ): Promise<Article[]> {
     try {
       const response = await this.client.get('/items/articles', {
         params: {
@@ -580,10 +737,11 @@ class DirectusClient {
             'translations.seo_summary',
             'translations.slug_permalink'
           ],
-          'deep[translations][_filter][languages_code][_eq]': languageCode
+          'deep[translations][_filter][languages_code][_eq]': languageCode,
+          'limit': limit // Aggiunta del limite
         }
       });
-
+  
       return response.data?.data || [];
     } catch (error) {
       console.error('[getArticlesByCategory] Error fetching articles:', error);

@@ -44,9 +44,11 @@ const Header: React.FC<HeaderProps> = ({ lang }) => {
 
   // Query per gli articoli utili
   const { data: usefulArticles } = useQuery({
-    queryKey: ['articles', lang],
-    queryFn: () => directusClient.getArticles(lang, -1),
-    select: (data) => data.filter(article => article.category_id === 9)
+    queryKey: ['useful-articles', lang],
+    queryFn: async () => {
+      const response = await directusClient.getArticles(lang, 0, 50, { category_id: 9 });
+      return response.articles || []; // Assicurati che sia un array
+    },
   });
 
   // Query per le destinazioni
@@ -79,12 +81,14 @@ const Header: React.FC<HeaderProps> = ({ lang }) => {
 
   // Rendering delle voci del menu utili
   const renderUsefulItems = () => {
-    if (!usefulArticles || !menuTranslations) return null;
-
+    if (!usefulArticles || usefulArticles.length === 0) {
+      return <p className="text-gray-500">No useful articles available.</p>;
+    }
+  
     return usefulMenuItems.map(({ key, id }) => {
       const article = usefulArticles.find(a => a.id === id);
       if (!article?.translations?.[0]?.slug_permalink) return null;
-
+  
       return (
         <Link
           key={id}
@@ -99,20 +103,21 @@ const Header: React.FC<HeaderProps> = ({ lang }) => {
   };
 
   return (
-    <header className={`sticky top-0 bg-white z-50 transition-all duration-300 ${isScrolled ? 'h-16' : 'h-20'}`}>
+    <header className={`sticky top-0 bg-white z-50 transition-all duration-300 ${isScrolled ? 'h-18' : 'h-20'}`}>
       <div className="border-b border-gray-100">
         <div className="container mx-auto px-4">
-          <div className={`flex items-center justify-between transition-all duration-300 ${isScrolled ? 'h-16' : 'h-20'}`}>
+          <div className={`flex items-center justify-between transition-all duration-300 ${isScrolled ? 'h-18' : 'h-20'}`}>
             {/* Logo */}
-            <Link href={`/${lang}/`} className="flex-shrink-0">
-              <Image
-                src="/images/logo-black.png"
-                alt={`The Best Italy ${lang}`}
-                width={isScrolled ? 64 : 96}
-                height={isScrolled ? 64 : 96}
-                className="transition-all duration-300"
-                priority
-              />
+            <Link href={lang ? `/${lang}/` : "/"} className="flex-shrink-0">
+            <Image
+              src="/images/logo-black.png"
+              alt={`The Best Italy ${lang}`}
+              width={96}
+              height={96}
+              style={{ width: "auto", height: "auto" }}
+              className="w-12 h-auto" // esempio: cambi dimensioni via Tailwind
+              priority
+            />
             </Link>
 
             {/* Mobile Menu Button */}
@@ -134,41 +139,41 @@ const Header: React.FC<HeaderProps> = ({ lang }) => {
               >
                 <button className={`h-full flex items-center px-6 text-gray-700 hover:text-blue-600 transition-all duration-300 ${isScrolled ? 'text-base' : 'text-lg'}`}>
                   {menuTranslations?.destinations || 'Destinations'}
-                  <ChevronDown size={16} className="ml-1" />
+                  <ChevronDown size={18} className="ml-1" />
                 </button>
 
                 {showDestinations && destinations && (
                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 bg-white rounded-2xl shadow-xl border border-gray-100 mt-[1px] min-w-[800px]">
-                    <div className="grid grid-cols-3 gap-x-8 p-6">
-                      <div className="grid grid-cols-2 col-span-2 gap-y-1">
-                        {destinations.map((destination) => {
-                          const translation = destination.translations?.[0];
-                          if (!translation?.slug_permalink) return null;
-
-                          return (
-                            <Link
-                              key={destination.id}
-                              href={`/${lang}/${translation.slug_permalink}/`}
-                              className="text-sm hover:text-blue-600 transition-colors py-0.5"
-                            >
-                              {translation.destination_name}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                      <div className="col-span-1">
-                        <div className="rounded-lg overflow-hidden">
-                          <Image
-                            src="/images/map.svg"
-                            alt="Italy Regions"
-                            width={300}
-                            height={400}
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
+                  <div className="grid grid-cols-3 gap-x-8 p-6">
+                    <div className="grid grid-cols-2 col-span-2 gap-y-[2px]">
+                      {destinations.map((destination) => {
+                        const translation = destination.translations?.[0];
+                        if (!translation?.slug_permalink) return null;
+                
+                        return (
+                          <Link
+                            key={destination.id}
+                            href={`/${lang}/${translation.slug_permalink}/`}
+                            className="text-md hover:text-blue-600 transition-colors leading-tight !m-0 !p-0"
+                          >
+                            {translation.destination_name}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                    <div className="col-span-1">
+                      <div className="rounded-lg overflow-hidden">
+                        <Image
+                          src="/images/map.svg"
+                          alt="Italy Regions"
+                          width={300}
+                          height={400}
+                          className="w-full h-full object-contain"
+                        />
                       </div>
                     </div>
                   </div>
+                </div>
                 )}
               </div>
 
@@ -183,7 +188,7 @@ const Header: React.FC<HeaderProps> = ({ lang }) => {
                   className={`h-full flex items-center px-6 text-gray-700 hover:text-blue-600 transition-all duration-300 ${isScrolled ? 'text-base' : 'text-lg'}`}
                 >
                   {menuTranslations?.magazine || 'Magazine'}
-                  <ChevronDown size={16} className="ml-1" />
+                  <ChevronDown size={18} className="ml-1" />
                 </Link>
 
                 {showMagazine && categories && (
@@ -267,7 +272,7 @@ const Header: React.FC<HeaderProps> = ({ lang }) => {
                     src={`/images/flags/${lang}.svg`}
                     alt={lang.toUpperCase()}
                     width={24}
-                    height={16}
+                    height={18}
                     className="rounded"
                   />
                   <span className={`ml-2 transition-all duration-300 ${isScrolled ? 'text-base' : 'text-lg'}`}>
@@ -286,14 +291,18 @@ const Header: React.FC<HeaderProps> = ({ lang }) => {
               {/* Mobile Menu Content */}
               <div className="sticky top-0 bg-white z-10">
                 <div className="h-20 border-b border-gray-100 flex items-center justify-between px-4">
-                  <Link href={`/${lang}/`} className="flex-shrink-0">
-                    <Image
-                      src="/images/logo-black.png"
-                      alt={`The Best Italy ${lang}`}
-                      width={48}
-                      height={48}
-                      priority
-                    />
+                  <Link href={lang ? `/${lang}/` : "/"} className="flex-shrink-0">
+                  <Image
+                    src="/images/logo-black.png"
+                    alt={`The Best Italy ${lang}`}
+                    width={80}
+                    height={80}
+                    // Impedisce a Next di lamentarsi, e consenti la riduzione via Tailwind
+                    style={{ width: "auto", height: "auto", maxWidth: "100%" }}
+                    className="w-12" // Lascio SOLO w-12, rimuovo h-auto
+                    priority
+                  />
+
                   </Link>
                   <div className="flex items-center space-x-4">
                     <button
@@ -338,7 +347,11 @@ const Header: React.FC<HeaderProps> = ({ lang }) => {
                           return (
                             <Link
                               key={destination.id}
-                              href={`/${lang}/${translation.slug_permalink}/`}
+                              href={
+                                lang && translation?.slug_permalink
+                                  ? `/${lang}/${translation.slug_permalink}/`
+                                  : null
+                              }
                               className="block py-1 text-gray-600"
                               onClick={() => setIsMobileMenuOpen(false)}
                             >
@@ -372,7 +385,11 @@ const Header: React.FC<HeaderProps> = ({ lang }) => {
                           return (
                             <Link
                               key={category.id}
-                              href={`/${lang}/magazine/c/${translation.slug_permalink}/`}
+                              href={
+                                lang && translation?.slug_permalink
+                                  ? `/${lang}/${translation.slug_permalink}/`
+                                  : null
+                              }
                               className="block py-1 text-gray-600"
                               onClick={() => setIsMobileMenuOpen(false)}
                             >
@@ -424,7 +441,7 @@ const Header: React.FC<HeaderProps> = ({ lang }) => {
                         src={`/images/flags/${lang}.svg`}
                         alt={lang.toUpperCase()}
                         width={24}
-                        height={16}
+                        height={18}
                         className="rounded mr-2"
                       />
                       {lang.toUpperCase()}
