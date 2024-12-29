@@ -8,7 +8,6 @@ interface DestinationSidebarProps {
   currentDestinationId: string;
   regionSlug: string;
   provinceSlug: string;
-  currentSlug: string;
   provinceId?: string; // L'ID della provincia può essere opzionale
   lang: string;
   type: "region" | "province" | "municipality";
@@ -18,7 +17,6 @@ const DestinationSidebar: React.FC<DestinationSidebarProps> = ({
   currentDestinationId,
   regionSlug,
   provinceSlug,
-  currentSlug,
   provinceId,
   lang,
   type,

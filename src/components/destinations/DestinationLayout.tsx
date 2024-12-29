@@ -10,6 +10,7 @@ import Breadcrumb from "@/components/layout/Breadcrumb";
 import DestinationSidebar from "@/components/destinations/DestinationSidebar";
 import ArticlesSidebar from "@/components/widgets/ArticlesSidebar";
 import Seo from "@/components/widgets/Seo";
+import Markdown from "react-markdown";
 
 interface DestinationLayoutProps {
   slug: string;
@@ -89,9 +90,8 @@ export default function DestinationLayout({ slug, lang, type, parentSlug }: Dest
           </div>
         </div>
       </div>
-
       {/* Breadcrumb */}
-      <Breadcrumb lang={lang} regionSlug={regionSlug} provinceSlug={provinceSlug} municipalitySlug={municipalitySlug} />
+      <Breadcrumb regionSlug={regionSlug} provinceSlug={provinceSlug} municipalitySlug={municipalitySlug} />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-12">
@@ -110,7 +110,7 @@ export default function DestinationLayout({ slug, lang, type, parentSlug }: Dest
 
             {translation?.description && (
               <article className="prose max-w-none mb-8">
-                <ReactMarkdown>{translation.description}</ReactMarkdown>
+                <ReactMarkdown children={translation.description} />
               </article>
             )}
 
@@ -130,8 +130,7 @@ export default function DestinationLayout({ slug, lang, type, parentSlug }: Dest
             currentDestinationId={destination.id}
             regionSlug={slugData.regionSlug}
             provinceSlug={slugData.provinceSlug}
-            currentSlug={translation?.slug_permalink || ""}
-            provinceId={provinceId}  // Passa solo l'ID della provincia come stringa
+            provinceId={provinceId.toString()}  // Convert provinceId to string
             lang={lang}
             type={destination.type}
           />

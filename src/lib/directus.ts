@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import { error } from 'console';
 
 // Interfaces
 export interface Translation {
@@ -11,6 +12,7 @@ export interface Translation {
 }
 
 export interface Destination {
+  province_id: any;
   id: string;
   type: 'region' | 'province' | 'municipality';
   image?: string;
@@ -210,13 +212,6 @@ interface GetDestinationsParams {
   lang: string;
 }
 class DirectusClient {
-  get(arg0: string, arg1: { params: { sort: string[]; fields: string[]; }; }) {
-    throw new Error('Method not implemented.');
-  }
-
-  readOne(arg0: string, arg1: string, arg2: { lang: string; }): any {
-    throw new Error('Method not implemented.');
-  }
   private client: AxiosInstance;
 
   constructor() {
@@ -245,6 +240,7 @@ class DirectusClient {
       }
     );
   }
+
   public async get(url: string, config?: object) {
     try {
       const response = await this.client.get(url, config);
@@ -254,15 +250,17 @@ class DirectusClient {
       throw error;
     }
   }
+
   public async testAuth(): Promise<boolean> {
     try {
       await this.client.get('/users/me');
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Auth test failed:', error);
       return false;
     }
   }
+
   async getCompanies(lang: string, filters: Record<string, any> = {}) {
     try {
       const response = await this.client.get('/items/companies', {
@@ -919,3 +917,7 @@ export const fetchArticleBySlug = async (slug: string, languageCode: string) => 
 
 const directusClient = new DirectusClient();
 export default directusClient;
+
+function testAuth() {
+  throw new Error('Function not implemented.');
+}
