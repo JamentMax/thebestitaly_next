@@ -215,12 +215,15 @@ class DirectusClient {
   private client: AxiosInstance;
 
   constructor() {
+    const directusUrl = 'http://127.0.0.1:8055'; // Forza IPv4
+    
     this.client = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_DIRECTUS_URL,
+      baseURL: directusUrl,
       headers: {
         'Authorization': `Bearer ${process.env.NEXT_PUBLIC_DIRECTUS_TOKEN}`,
         'Content-Type': 'application/json',
       },
+      withCredentials: true
     });
   
     this.setupInterceptors();
@@ -228,16 +231,16 @@ class DirectusClient {
 
   private setupInterceptors() {
     this.client.interceptors.request.use(request => {
+      // Assicuriamoci che l'URL sia IPv4
+      if (request.url?.includes('::1')) {
+        request.url = request.url.replace('::1', '127.0.0.1');
+      }
       return request;
     });
 
     this.client.interceptors.response.use(
-      response => {
-        return response;
-      },
-      error => {
-        return Promise.reject(error);
-      }
+      response => response,
+      error => Promise.reject(error)
     );
   }
 

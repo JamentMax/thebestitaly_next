@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "proxy": "http://127.0.0.1:8055",
     "dev": "next dev --turbopack",
     "build": "next build --no-lint",
     "start": "next start",
