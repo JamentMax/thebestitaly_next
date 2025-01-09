@@ -74,3 +74,4 @@ logs/
 # Cache directories
 .cache/
 .next/cache/.env.production
+thebest_italy_db_no_revisions.sql.gz
