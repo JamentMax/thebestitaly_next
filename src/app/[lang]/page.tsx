@@ -1,4 +1,3 @@
-// app/[lang]/page.tsx
 import { Metadata } from 'next';
 import { Suspense } from 'react';
 import { getTranslations } from '@/lib/directus';
@@ -11,12 +10,18 @@ import ProjectIntro from '../../components/home/ProjectIntro';
 import BookExperience from '../../components/home/BookExperience';
 import { generateMetadata as generateSEO } from '@/components/widgets/seo-utils';
 
+// 1) Definisci un tipo "locale" per le props
 interface PageProps {
-  params: Promise<{ lang: string }>;
+  params: {
+    lang: string;
+  };
 }
 
+// 2) Usa il tuo tipo nel metodo generateMetadata
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { lang } = await params;
+  // Non serve fare `await params`, è un semplice oggetto
+  const { lang } = params;
+
   const homeTranslations = await getTranslations(lang, 'homepage');
 
   return generateSEO({
@@ -26,8 +31,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   });
 }
 
+// 3) Pagina
 export default async function Home({ params }: PageProps) {
-  const { lang } = await params;
+  // params NON è una Promise
+  const { lang } = params;
+
   const homeTranslations = await getTranslations(lang, 'homepage');
 
   return (

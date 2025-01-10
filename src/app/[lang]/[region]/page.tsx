@@ -1,14 +1,19 @@
 import DestinationLayout from "@/components/destinations/DestinationLayout";
 
+// 1) Definisci il tipo per i parametri
 interface RegionPageProps {
-  params: { lang: string; region: string };
+  params: {
+    lang: string;
+    region: string;
+  };
 }
 
+// 2) Pagina
 export default async function RegionPage({ params }: RegionPageProps) {
-  // Assicurati di utilizzare `await` per accedere a `params`
-  const { lang, region } = await Promise.resolve(params);
+  // NON serve "await Promise.resolve(params)"
+  // perché `params` è un semplice oggetto.
+  const { lang, region } = params;
 
-  // Verifica che i parametri siano definiti
   if (!lang || !region) {
     throw new Error("Missing required parameters: lang or region");
   }

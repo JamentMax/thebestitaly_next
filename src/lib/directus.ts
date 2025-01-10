@@ -452,6 +452,7 @@ class DirectusClient {
     }
   }
 
+  
   public async getDestinationsByType(type: string, languageCode: string): Promise<Destination[]> {
     try {
       const response = await this.client.get('/items/destinations', {
@@ -882,7 +883,43 @@ class DirectusClient {
 }
 // Assicurati che non sia dentro un blocco come una funzione o un'istruzione condizionale
 
-
+export async function getDestinationsByType(type: string, languageCode: string) {
+  try {
+    const response = await directusClient.get('/items/destinations', {
+      params: {
+        filter: {
+          type: {
+            _eq: type,
+          },
+        },
+        fields: [
+          'id',
+          'type',
+          'image',
+          'region_id',
+          'province_id',
+          'translations.destination_name',
+          'translations.seo_title',
+          'translations.seo_summary',
+          'translations.slug_permalink',
+        ],
+        deep: {
+          translations: {
+            _filter: {
+              languages_code: {
+                _eq: languageCode,
+              },
+            },
+          },
+        },
+      },
+    });
+    return response.data.data || [];
+  } catch (error) {
+    console.error('Error fetching destinations:', error);
+    return [];
+  }
+}
 
 export const fetchArticleBySlug = async (slug: string, languageCode: string) => {
   if (!slug || !languageCode) {
@@ -918,7 +955,12 @@ export const fetchArticleBySlug = async (slug: string, languageCode: string) => 
 };
 
 
-const directusClient = new DirectusClient();
+const directusClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_DIRECTUS_URL,
+  headers: {
+    Authorization: `Bearer ${process.env.NEXT_PUBLIC_DIRECTUS_TOKEN}`,
+  },
+});
 export default directusClient;
 
 function testAuth() {
