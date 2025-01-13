@@ -8,9 +8,14 @@ import { getTranslations } from '../../lib/directus';
 const FlorenceImage = '/images/home/florence.webp';
 const SanPietroImage = '/images/home/san-pietro.webp';
 
-const ProjectIntro: React.FC = () => {
+interface ProjectIntroProps {
+  translations: any; // Replace 'any' with a proper type definition
+  lang: string;
+}
+
+const ProjectIntro: React.FC<ProjectIntroProps> = ({ translations, lang }) => {
   const params = useParams();
-  const lang = (params?.lang as string) || 'it';
+  const currentLang = (params?.lang as string) || 'it';
 
   const { data: infoTranslations } = useQuery({
     queryKey: ['translations', lang, 'infothebest'],

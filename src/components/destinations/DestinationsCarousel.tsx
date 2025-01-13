@@ -72,7 +72,7 @@ const DestinationsCarousel: React.FC<DestinationsCarouselProps> = ({ lang, type 
 
         {/* Carousel Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 h-[600px]">
-          {visibleDestinations.map((destination) => {
+          {visibleDestinations.map((destination: { translations: any[]; id: React.Key | null | undefined; image: any; }) => {
             const translation = destination.translations?.[0];
             if (!translation?.slug_permalink || !translation?.destination_name) return null;
 

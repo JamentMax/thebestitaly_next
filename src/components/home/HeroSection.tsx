@@ -11,9 +11,13 @@ const backgroundImages = [
   '/images/hero/hero-img-3.webp',
 ];
 
-const HeroSection: React.FC = () => {
+interface HeroSectionProps {
+  translations: any; // Replace 'any' with a proper type definition
+  lang: string;
+}
+
+const HeroSection: React.FC<HeroSectionProps> = ({ translations, lang }) => {
   const params = useParams();
-  const lang = (params?.lang as string) || 'it';
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const { data: homeTranslations } = useQuery({

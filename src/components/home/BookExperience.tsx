@@ -7,9 +7,12 @@ import { getTranslations } from "../../lib/directus";
 
 const BookExperienceImage = "/images/book-experience.webp";
 
-const BookExperience: React.FC = () => {
-  const { lang = "en" } = useParams<{ lang: string }>();
+interface BookExperienceProps {
+  translations: any; // Replace 'any' with a proper type definition
+  lang: string;
+}
 
+const BookExperience: React.FC<BookExperienceProps> = ({ translations, lang }) => {
   const { data: menuTranslations, isLoading, isError } = useQuery({
     queryKey: ["translations", lang, "menu"],
     queryFn: () => getTranslations(lang, "menu"),

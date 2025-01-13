@@ -215,10 +215,13 @@ class DirectusClient {
   private client: AxiosInstance;
 
   constructor() {
-    const directusUrl = 'http://127.0.0.1:8055'; // Forza IPv4
+    const baseURL = process.env.NEXT_PUBLIC_DIRECTUS_URL;
+    if (!baseURL) {
+      throw new Error('NEXT_PUBLIC_DIRECTUS_URL is not defined');
+    }
     
     this.client = axios.create({
-      baseURL: directusUrl,
+      baseURL,
       headers: {
         'Authorization': `Bearer ${process.env.NEXT_PUBLIC_DIRECTUS_TOKEN}`,
         'Content-Type': 'application/json',
