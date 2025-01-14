@@ -148,7 +148,6 @@ const Footer: React.FC = () => {
 
        <div className="mt-8 pt-8 border-t border-gray-700 text-center text-gray-300">
          <p>
-           &copy; {new Date().getFullYear()} TheBestItaly.{" "}
            {footerTranslations?.copyright || "Default footer description"}.
          </p>
        </div>

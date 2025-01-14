@@ -13,9 +13,13 @@ const nextConfig = {
   },
   async rewrites() {
     return [
-      {
+      /* {
         source: '/api/:path*',
         destination: 'http://127.0.0.1:8055/:path*', // Reindirizzamento API a Directus locale
+      }, */
+      {
+        source: "/api/:path*",
+        destination: "http://164.90.172.76:8055/:path*",
       },
     ];
   },

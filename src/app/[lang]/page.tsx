@@ -9,7 +9,8 @@ import DestinationsCarousel from '@/components/destinations/DestinationsCarousel
 import ProjectIntro from '@/components/home/ProjectIntro';
 import BookExperience from '@/components/home/BookExperience';
 import { generateMetadata as generateSEO } from '@/components/widgets/seo-utils';
-
+console.log('Directus URL:', process.env.NEXT_PUBLIC_DIRECTUS_URL);
+console.log('Authorization Token:', process.env.NEXT_PUBLIC_DIRECTUS_TOKEN);
 // Define the translation type
 interface HomeTranslations {
   seo_title?: string;
@@ -24,7 +25,7 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const lang = params.lang;
+  const { lang } = await Promise.resolve(params);
   
   try {
     const homeTranslations = await getTranslations(lang, 'homepage');
@@ -44,7 +45,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function HomePage({ params }: PageProps) {
-  const lang = params.lang;
+  const { lang } = await Promise.resolve(params);
   const translations = await getTranslations(lang, 'homepage');
 
   return (

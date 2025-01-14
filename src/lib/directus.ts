@@ -21,6 +21,7 @@ export interface Destination {
 
 export const getTranslations = async (lang: string, section: string) => {
   try {
+    // Fai la richiesta al Directus API
     const response = await directusClient.get('/items/translations', {
       params: {
         filter: {
@@ -31,23 +32,39 @@ export const getTranslations = async (lang: string, section: string) => {
       },
     });
 
-    // Verifica che ci sia il contenuto
-    if (!response?.data?.data?.[0]?.content) {
-      console.warn('No content found in translation response');
+    // Controllo contenuto della risposta
+    const data = response?.data?.data;
+    if (!data || !data.length || !data[0]?.content) {
+      console.warn(
+        `No content found for language "${lang}" and section "${section}"`
+      );
       return null;
     }
 
-    // Parse del contenuto JSON
+    // Prova a parsare il contenuto JSON
     try {
-      const parsedContent = JSON.parse(response.data.data[0].content);
-
+      const parsedContent = JSON.parse(data[0].content);
       return parsedContent;
     } catch (parseError) {
-      console.error('Error parsing content:', parseError);
+      console.error(
+        `Error parsing content for language "${lang}" and section "${section}":`,
+        parseError
+      );
       return null;
     }
-  } catch (error) {
-    console.error('Translation fetch error:', error);
+  } catch (error: any) {
+    // Controllo specifico per errori di rete
+    if (error.response) {
+      console.error(
+        `Error fetching translations: ${error.response.status} - ${error.response.statusText}`,
+        error.response.data
+      );
+    } else if (error.request) {
+      console.error('No response received from Directus API:', error.request);
+    } else {
+      console.error('Error during translation fetch:', error.message);
+    }
+
     return null;
   }
 };
